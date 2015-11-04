@@ -62,7 +62,7 @@ class User extends TT_Controller {
 	public function del()
 	{
 		$id = $this->input->post('id');
-		$result = $this->user_model->update(array('status'=>1), $id);
+		$result = $this->user_model->update(array('status'=>3), $id);
 		if($result){
 			echo 'success';
 		}
@@ -94,6 +94,10 @@ class User extends TT_Controller {
 
 	public function edit()
 	{
+		$avatar = $this->input->post('avatar');
+		if(strpos($avatar, $this->config->config['msfs_url']) === false){
+			$avatar = $this->config->config['msfs_url'].$this->input->post('avatar');
+		}
 		$params = array(
 			'sex'=>$this->input->post('sex'),
 			'name'=>$this->input->post('name'),
@@ -101,16 +105,16 @@ class User extends TT_Controller {
 			'nick'=>$this->input->post('nick'),
 			'phone'=>$this->input->post('phone'),
 			'email'=>$this->input->post('email'),
-			'avatar'=>$this->config->config['msfs_url'].$this->input->post('avatar'),
+			'avatar'=>$avatar,
 			'departId'=>$this->input->post('departId'),
 			'status'=>$this->input->post('status'),
 			'updated'=>time()
 		);
 		$id = $this->input->post('id');
 		$result = $this->user_model->getOne(array('id'=>$id));
-		$pwd = $this->input->post('pwd');
+		$pwd = $this->input->post('password');
 		if($pwd){
-			$params['pwd'] = md5(md5($this->input->post('password')).$result["salt"]);
+			$params['password'] = md5(md5($this->input->post('password')).$result["salt"]);
 		}
 		$result = $this->user_model->update($params,$id);
 		if($result){
@@ -186,7 +190,9 @@ class User extends TT_Controller {
 	public function _upload($filename)
 	{
 		$ch = curl_init();
-		$data = array('filename'=>'@'.$filename);
+		//$data = array('filename'=>'@'.$filename);
+		$cfile = new CurlFile($filename);
+		$data = array('filename'=> $cfile);
 		curl_setopt($ch,CURLOPT_URL,$this->config->config['msfs_url']);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POST,true);
